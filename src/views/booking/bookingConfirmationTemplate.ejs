@@ -1,0 +1,150 @@
+<!-- views/booking/bookingConfirmationTemplate.ejs -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Booking Confirmation</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
+  <style type="text/css">
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Roboto', sans-serif;
+      line-height: 1.6;
+      background-color: #f5f5f5;
+    }
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 20px;
+    }
+    .header {
+      text-align: center;
+      padding: 20px;
+      background: #fff7e6;
+    }
+    .confirmation-icon {
+      text-align: center;
+      margin: 30px 0;
+    }
+    .booking-details {
+      padding: 20px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      margin: 20px 0;
+    }
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid #dee2e6;
+    }
+    .price-details {
+      margin-top: 20px;
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .success-text {
+      color: #28a745;
+    }
+    .footer {
+      text-align: center;
+      padding: 20px;
+      margin-top: 30px;
+      background: #f8f9fa;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <img src="<%= hotelLogo %>" alt="Hotel Logo" style="max-width: 200px;" />
+    </div>
+
+    <div class="confirmation-icon">
+      <img src="<%= confirmationIcon %>" alt="Confirmation Icon" style="width: 80px;" />
+    </div>
+
+    <div style="text-align: center;">
+      <h1 style="color: #28a745; margin-bottom: 10px;">Booking Confirmed!</h1>
+      <p style="color: #666;">Booking Number: <%= booking.bookingNumber %></p>
+      <p style="color: #666;">Reservation Number: <%= booking.thirdPartyReservationNo %></p>
+    </div>
+
+    <div class="booking-details">
+      <h2 style="margin-bottom: 20px;">Guest Information</h2>
+      <div class="detail-row">
+        <strong>Guest Name:</strong>
+        <span><%= booking.guestDetails.title %> <%= booking.guestDetails.firstName %> <%= booking.guestDetails.lastName %></span>
+      </div>
+      <div class="detail-row">
+        <strong>Email:</strong>
+        <span><%= booking.guestDetails.email %></span>
+      </div>
+      <div class="detail-row">
+        <strong>Phone:</strong>
+        <span><%= booking.guestDetails.phone %></span>
+      </div>
+    </div>
+
+    <div class="booking-details">
+      <h2 style="margin-bottom: 20px;">Stay Details</h2>
+      <div class="detail-row">
+        <strong>Check-in:</strong>
+        <span><%= formatDate(booking.checkIn) %></span>
+      </div>
+      <div class="detail-row">
+        <strong>Check-out:</strong>
+        <span><%= formatDate(booking.checkOut) %></span>
+      </div>
+      <div class="detail-row">
+        <strong>Room Type:</strong>
+        <span><%= booking.roomDetails.roomName %></span>
+      </div>
+      <div class="detail-row">
+        <strong>Number of Nights:</strong>
+        <span><%= booking.numberOfNights %></span>
+      </div>
+    </div>
+
+    <div class="price-details">
+      <h2 style="margin-bottom: 20px;">Price Details</h2>
+      <div class="detail-row">
+        <strong>Room Charges:</strong>
+        <span><%= booking.pricing.currency %> <%= booking.pricing.baseRate.toFixed(2) %></span>
+      </div>
+      <div class="detail-row">
+        <strong>Taxes:</strong>
+        <span><%= booking.pricing.currency %> <%= booking.pricing.taxAmount.toFixed(2) %></span>
+      </div>
+      <% if (booking.pricing.isCouponApplied) { %>
+      <div class="detail-row success-text">
+        <strong>Discount (<%= booking.pricing.promotionCode %>):</strong>
+        <span>-<%= booking.pricing.currency %> <%= booking.pricing.discountAmount.toFixed(2) %></span>
+      </div>
+      <% } %>
+      <div class="detail-row" style="border-bottom: 2px solid #000; font-weight: bold;">
+        <strong>Total Amount:</strong>
+        <span><%= booking.pricing.currency %> <%= booking.pricing.totalAmount.toFixed(2) %></span>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p style="margin-bottom: 10px;">Contact us for any assistance</p>
+      <div style="margin: 20px 0;">
+        <a href="<%= socialLinks.facebook %>" style="margin: 0 10px;"><img src="<%= socialIcons.facebook %>" alt="Facebook" style="width: 24px;"></a>
+        <a href="<%= socialLinks.twitter %>" style="margin: 0 10px;"><img src="<%= socialIcons.twitter %>" alt="Twitter" style="width: 24px;"></a>
+        <a href="<%= socialLinks.instagram %>" style="margin: 0 10px;"><img src="<%= socialIcons.instagram %>" alt="Instagram" style="width: 24px;"></a>
+      </div>
+      <p style="color: #666;">© <%= new Date().getFullYear() %> <%= hotelName %>. All Rights Reserved.</p>
+    </div>
+  </div>
+</body>
+</html>
