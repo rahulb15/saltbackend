@@ -78,33 +78,39 @@ const allowedOrigins = [
   'http://localhost:3006',
   'https://admin.saltstayz.in',
   'https://saltstayz.in',
+  'https://api.saltstayz.in'
 ];
 
 const corsOptions: CorsOptions = {
   origin: (origin, callback) => {
-    if (allowedOrigins.indexOf(origin || '') !== -1 || !origin) {
+    console.log("Request origin:", origin); // Add this for debugging
+    if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
+      console.log("Blocked by CORS:", origin); // Add this for debugging
       callback(new Error('Not allowed by CORS'));
     }
   },
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: [
-    'Content-Type',
-    'Authorization',
-    'X-Requested-With',
-    'Accept',
-    'Origin'
-  ],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
   exposedHeaders: ['Content-Range', 'X-Content-Range'],
   credentials: true,
-  maxAge: 86400, // 24 hours
-  preflightContinue: false,
-  optionsSuccessStatus: 204
+  maxAge: 86400
 };
 
 // Apply security middleware
 app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'", "https://api.saltstayz.in", "https://admin.saltstayz.in"],
+      connectSrc: ["'self'", "https://api.saltstayz.in", "https://admin.saltstayz.in", "http://localhost:3006"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "https:"],
+      fontSrc: ["'self'", "https:", "data:"],
+      frameAncestors: ["'self'", "https://admin.saltstayz.in"]
+    }
+  },
   crossOriginResourcePolicy: { policy: "cross-origin" },
   crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" }
 }));
