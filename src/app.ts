@@ -15,7 +15,9 @@ const app = express();
 
 const allowedOrigins = [
   'http://localhost:3005',
-  'http://localhost:3006'
+  'http://localhost:3006',
+  'https://admin.saltstayz.com',
+  'https://saltstayz.com',
 ];
 
 const corsOptions: CorsOptions = {
