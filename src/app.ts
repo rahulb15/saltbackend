@@ -13,26 +13,22 @@ require('dotenv').config();
 
 const app = express();
 
-// const allowedOrigins = [
-//   'http://localhost:3005',
-//   'http://localhost:3006',
-//   'https://admin.saltstayz.in',
-//   'https://saltstayz.in',
-// ];
-
-// const corsOptions: CorsOptions = {
-//   origin: (origin, callback) => {
-//     if (allowedOrigins.indexOf(origin || '') !== -1 || !origin) {
-//       callback(null, true);
-//     } else {
-//       callback(new Error('Not allowed by CORS'));
-//     }
-//   },
-//   credentials: true // Add this if you're using credentials
-// };
+const allowedOrigins = [
+  'http://localhost:3005',
+  'http://localhost:3006',
+  'https://admin.saltstayz.in',
+  'https://saltstayz.in',
+  'http://165.227.124.224:5001'
+];
 
 app.use(cors({
-  origin: '*',
+  origin: function(origin, callback) {
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
   credentials: true
