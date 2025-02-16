@@ -1,7 +1,8 @@
 import express from 'express';
 import morgan from 'morgan';
 import helmet from 'helmet';
-import cors from 'cors';
+import cors, { CorsOptions } from 'cors';
+import bodyParser from 'body-parser';
 import * as middlewares from './middlewares/response-handler.middleware';
 import api from './api';
 import swaggerUI from "swagger-ui-express";
@@ -12,120 +13,65 @@ require('dotenv').config();
 
 const app = express();
 
+// ================== CORS CONFIGURATION ==================
 const allowedOrigins = [
   'http://localhost:3005',
   'http://localhost:3006',
   'https://admin.saltstayz.in',
   'https://saltstayz.in',
-  'http://165.227.124.224:5001',
-  'https://165.227.124.224:5001'
 ];
 
-// Enhanced debugging middleware
-app.use((req, res, next) => {
-  console.log('Incoming Request:', {
-    timestamp: new Date().toISOString(),
-    method: req.method,
-    url: req.url,
-    origin: req.headers.origin,
-    host: req.headers.host,
-    'user-agent': req.headers['user-agent']
-  });
-  next();
-});
-
-// CORS configuration
-app.use(cors({
-  origin: function(origin, callback) {
-    console.log('Request origin:', origin); // Debug log
-    if (!origin || allowedOrigins.includes(origin)) {
+const corsOptions: CorsOptions = {
+  origin: (origin, callback) => {
+    if (allowedOrigins.indexOf(origin || '') !== -1 || !origin) {
       callback(null, true);
     } else {
-      console.log('Origin not allowed:', origin); // Debug log
       callback(new Error('Not allowed by CORS'));
     }
   },
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: [
-    'Content-Type', 
-    'Authorization', 
-    'X-Requested-With', 
-    'Accept', 
-    'Origin',
-    'Access-Control-Allow-Headers',
-    'Access-Control-Request-Method',
-    'Access-Control-Request-Headers'
-  ],
   credentials: true,
-  maxAge: 86400 // 24 hours
-}));
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
+};
 
-// Helmet configuration
+// ================== MIDDLEWARE ORDERING ==================
+app.use(morgan('dev'));
+app.set('trust proxy', 1);  // Trust first proxy (NGINX)
+
+// Security headers
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" },
-  crossOriginOpenerPolicy: { policy: "unsafe-none" },
-  contentSecurityPolicy: false,
-  crossOriginEmbedderPolicy: false
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'"]
+    }
+  }
 }));
 
-// Request logging
-app.use(morgan('dev'));
+app.use(cors(corsOptions));
 
-// Body parsing middleware
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+// Body parsing (using body-parser)
+app.use(bodyParser.json({ limit: '50mb' }));
+app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
 
-// Pre-route middleware to handle OPTIONS requests
-app.use((req, res, next) => {
-  if (req.method === 'OPTIONS') {
-    console.log('Handling OPTIONS request');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
-    res.header('Access-Control-Max-Age', '86400');
-    return res.status(200).send();
-  }
-  next();
-});
-
-// Request body logging middleware
-app.use((req, res, next) => {
-  if (req.body && Object.keys(req.body).length) {
-    console.log('Request Body:', {
-      path: req.path,
-      method: req.method,
-      body: req.body,
-      contentType: req.headers['content-type']
-    });
-  }
-  next();
-});
-
-// Swagger Configuration
+// ================== SWAGGER DOCS ==================
 const specs = swaggerJsDoc(options);
 app.use("/docs", swaggerUI.serve, swaggerUI.setup(specs));
 
-// Routes
+// ================== REQUEST LOGGING ==================
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path}`);
+  console.log('Request Body:', req.body);
+  next();
+});
+
+// ================== ROUTES ==================
 app.use('/api/v1', api);
 
-// Error handling
+// ================== ERROR HANDLERS ==================
 app.use(middlewares.notFound);
 app.use(middlewares.errorHandler);
-
-// Global error handler
-app.use((err:any, req:any, res:any, next:any) => {
-  console.error('Global error:', {
-    error: err.message,
-    stack: err.stack,
-    path: req.path,
-    method: req.method
-  });
-  
-  res.status(err.status || 500).json({
-    error: {
-      message: err.message || 'Internal server error',
-      status: err.status || 500
-    }
-  });
-});
 
 export default app;
