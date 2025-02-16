@@ -14,27 +14,64 @@ require('dotenv').config();
 const app = express();
 
 // ================== CORS CONFIGURATION ==================
+// const allowedOrigins = [
+//   'http://localhost:3005',
+//   'http://localhost:3006',
+//   'https://admin.saltstayz.in',
+//   'https://saltstayz.in',
+// ];
+
+
 const allowedOrigins = [
   'http://localhost:3005',
   'http://localhost:3006',
   'https://admin.saltstayz.in',
   'https://saltstayz.in',
+  'https://api.saltstayz.in'  // Add this line
 ];
+
+
+// const corsOptions: CorsOptions = {
+//   origin: (origin, callback) => {
+//     if (allowedOrigins.indexOf(origin || '') !== -1 || !origin) {
+//       callback(null, true);
+//     } else {
+//       callback(new Error('Not allowed by CORS'));
+//     }
+//   },
+//   credentials: true,
+//   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
+// };
+
+// ================== MIDDLEWARE ORDERING ==================
+
 
 const corsOptions: CorsOptions = {
   origin: (origin, callback) => {
     if (allowedOrigins.indexOf(origin || '') !== -1 || !origin) {
       callback(null, true);
     } else {
+      console.log('Blocked by CORS:', origin); // This helps with debugging
       callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true,
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
+  allowedHeaders: [
+    'Content-Type', 
+    'Authorization', 
+    'X-Requested-With', 
+    'Accept', 
+    'Origin',
+    'Cache-Control',
+    'If-Modified-Since',
+    'Range'
+  ],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range']
 };
 
-// ================== MIDDLEWARE ORDERING ==================
+
 app.use(morgan('dev'));
 app.set('trust proxy', 1);  // Trust first proxy (NGINX)
 
@@ -62,8 +99,9 @@ app.use("/docs", swaggerUI.serve, swaggerUI.setup(specs));
 
 // ================== REQUEST LOGGING ==================
 app.use((req, res, next) => {
-  console.log(`${req.method} ${req.path}`);
-  console.log('Request Body:', req.body);
+  console.log('Origin:', req.headers.origin);
+  console.log('Method:', req.method);
+  console.log('Path:', req.path);
   next();
 });
 
