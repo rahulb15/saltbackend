@@ -1,7 +1,7 @@
 import express from 'express';
 import morgan from 'morgan';
 import helmet from 'helmet';
-import cors from 'cors';
+import cors, { CorsOptions } from 'cors';
 import bodyParser from 'body-parser';
 import * as middlewares from './middlewares/response-handler.middleware';
 import api from './api';
@@ -13,67 +13,64 @@ require('dotenv').config();
 
 const app = express();
 
-// CORS Configuration - MUST BE FIRST
+// ================== CORS CONFIGURATION ==================
 const allowedOrigins = [
-    'http://localhost:3005',
-    'http://localhost:3006',
-    'https://admin.saltstayz.in',
-    'https://saltstayz.in',
-    'https://api.saltstayz.in'
+  'http://localhost:3005',
+  'http://localhost:3006',
+  'https://admin.saltstayz.in',
+  'https://saltstayz.in',
 ];
 
-const corsOptions = {
-    origin: function(origin: any, callback: any) {
-        console.log('Request origin:', origin); // For debugging
-        if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true);
-        } else {
-            console.log('Origin rejected:', origin);
-            callback(new Error('Not allowed by CORS'));
-        }
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
-    exposedHeaders: ['set-cookie'],
-    maxAge: 86400 // 24 hours
+const corsOptions: CorsOptions = {
+  origin: (origin, callback) => {
+    if (allowedOrigins.indexOf(origin || '') !== -1 || !origin) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
 };
 
-// Important: CORS must be before other middleware
-app.use(cors(corsOptions));
+// ================== MIDDLEWARE ORDERING ==================
+app.use(morgan('dev'));
+app.set('trust proxy', 1);  // Trust first proxy (NGINX)
 
-// Trust first proxy
-app.set('trust proxy', 1);
-
-// Security middleware with modified settings
+// Security headers
 app.use(helmet({
-    crossOriginResourcePolicy: false,
-    contentSecurityPolicy: false
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'"]
+    }
+  }
 }));
 
-// Logging middleware
-app.use(morgan('dev'));
+app.use(cors(corsOptions));
 
-// Body parsing middleware
+// Body parsing (using body-parser)
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
 
-// Swagger documentation setup
+// ================== SWAGGER DOCS ==================
 const specs = swaggerJsDoc(options);
 app.use("/docs", swaggerUI.serve, swaggerUI.setup(specs));
 
-// Debug logging middleware
+// ================== REQUEST LOGGING ==================
 app.use((req, res, next) => {
-    console.log(`${req.method} ${req.path}`);
-    console.log('Request Headers:', req.headers);
-    console.log('Request Body:', req.body);
-    next();
+  console.log(`${req.method} ${req.path}`);
+  console.log('Request Body:', req.body);
+  next();
 });
 
-// API routes
+// ================== ROUTES ==================
 app.use('/api/v1', api);
 
-// Error handling middleware
+// ================== ERROR HANDLERS ==================
 app.use(middlewares.notFound);
 app.use(middlewares.errorHandler);
 
