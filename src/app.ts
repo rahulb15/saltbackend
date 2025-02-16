@@ -1,7 +1,7 @@
 import express from 'express';
 import morgan from 'morgan';
 import helmet from 'helmet';
-import cors, { CorsOptions } from 'cors';
+import cors from 'cors';
 import bodyParser from 'body-parser';
 import * as middlewares from './middlewares/response-handler.middleware';
 import api from './api';
@@ -13,69 +13,33 @@ require('dotenv').config();
 
 const app = express();
 
-// ================== CORS CONFIGURATION ==================
-// const allowedOrigins = [
-//   'http://localhost:3005',
-//   'http://localhost:3006',
-//   'https://admin.saltstayz.in',
-//   'https://saltstayz.in',
-// ];
-
-
+// CORS Configuration
 const allowedOrigins = [
   'http://localhost:3005',
   'http://localhost:3006',
   'https://admin.saltstayz.in',
   'https://saltstayz.in',
-  'https://api.saltstayz.in'  // Add this line
+  'https://api.saltstayz.in'
 ];
 
-
-// const corsOptions: CorsOptions = {
-//   origin: (origin, callback) => {
-//     if (allowedOrigins.indexOf(origin || '') !== -1 || !origin) {
-//       callback(null, true);
-//     } else {
-//       callback(new Error('Not allowed by CORS'));
-//     }
-//   },
-//   credentials: true,
-//   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
-//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
-// };
-
-// ================== MIDDLEWARE ORDERING ==================
-
-
-const corsOptions: CorsOptions = {
-  origin: (origin, callback) => {
-    if (allowedOrigins.indexOf(origin || '') !== -1 || !origin) {
+const corsOptions = {
+  origin: function(origin:any, callback:any) {
+    console.log('Request origin:', origin); // For debugging
+    if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      console.log('Blocked by CORS:', origin); // This helps with debugging
       callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true,
-  allowedHeaders: [
-    'Content-Type', 
-    'Authorization', 
-    'X-Requested-With', 
-    'Accept', 
-    'Origin',
-    'Cache-Control',
-    'If-Modified-Since',
-    'Range'
-  ],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  exposedHeaders: ['Content-Range', 'X-Content-Range']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
 };
 
-
+// Middleware setup
 app.use(morgan('dev'));
-app.set('trust proxy', 1);  // Trust first proxy (NGINX)
+app.set('trust proxy', 1);
 
-// Security headers
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" },
   contentSecurityPolicy: {
@@ -89,26 +53,25 @@ app.use(helmet({
 
 app.use(cors(corsOptions));
 
-// Body parsing (using body-parser)
+// Body parsing
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
 
-// ================== SWAGGER DOCS ==================
+// Swagger setup
 const specs = swaggerJsDoc(options);
 app.use("/docs", swaggerUI.serve, swaggerUI.setup(specs));
 
-// ================== REQUEST LOGGING ==================
+// Request logging
 app.use((req, res, next) => {
-  console.log('Origin:', req.headers.origin);
-  console.log('Method:', req.method);
-  console.log('Path:', req.path);
+  console.log(`${req.method} ${req.path}`);
+  console.log('Request Body:', req.body);
   next();
 });
 
-// ================== ROUTES ==================
+// Routes
 app.use('/api/v1', api);
 
-// ================== ERROR HANDLERS ==================
+// Error handlers
 app.use(middlewares.notFound);
 app.use(middlewares.errorHandler);
 
