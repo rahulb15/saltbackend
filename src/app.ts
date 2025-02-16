@@ -13,65 +13,67 @@ require('dotenv').config();
 
 const app = express();
 
-// CORS Configuration
+// CORS Configuration - MUST BE FIRST
 const allowedOrigins = [
-  'http://localhost:3005',
-  'http://localhost:3006',
-  'https://admin.saltstayz.in',
-  'https://saltstayz.in',
-  'https://api.saltstayz.in'
+    'http://localhost:3005',
+    'http://localhost:3006',
+    'https://admin.saltstayz.in',
+    'https://saltstayz.in',
+    'https://api.saltstayz.in'
 ];
 
 const corsOptions = {
-  origin: function(origin:any, callback:any) {
-    console.log('Request origin:', origin); // For debugging
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
+    origin: function(origin: any, callback: any) {
+        console.log('Request origin:', origin); // For debugging
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            console.log('Origin rejected:', origin);
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+    exposedHeaders: ['set-cookie'],
+    maxAge: 86400 // 24 hours
 };
 
-// Middleware setup
-app.use(morgan('dev'));
-app.set('trust proxy', 1);
-
-app.use(helmet({
-  crossOriginResourcePolicy: { policy: "cross-origin" },
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'"],
-      styleSrc: ["'self'", "'unsafe-inline'"]
-    }
-  }
-}));
-
+// Important: CORS must be before other middleware
 app.use(cors(corsOptions));
 
-// Body parsing
+// Trust first proxy
+app.set('trust proxy', 1);
+
+// Security middleware with modified settings
+app.use(helmet({
+    crossOriginResourcePolicy: false,
+    contentSecurityPolicy: false
+}));
+
+// Logging middleware
+app.use(morgan('dev'));
+
+// Body parsing middleware
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
 
-// Swagger setup
+// Swagger documentation setup
 const specs = swaggerJsDoc(options);
 app.use("/docs", swaggerUI.serve, swaggerUI.setup(specs));
 
-// Request logging
+// Debug logging middleware
 app.use((req, res, next) => {
-  console.log(`${req.method} ${req.path}`);
-  console.log('Request Body:', req.body);
-  next();
+    console.log(`${req.method} ${req.path}`);
+    console.log('Request Headers:', req.headers);
+    console.log('Request Body:', req.body);
+    next();
 });
 
-// Routes
+// API routes
 app.use('/api/v1', api);
 
-// Error handlers
+// Error handling middleware
 app.use(middlewares.notFound);
 app.use(middlewares.errorHandler);
 
