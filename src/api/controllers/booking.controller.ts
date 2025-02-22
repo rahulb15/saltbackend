@@ -254,11 +254,35 @@ import { sendBookingConfirmationMail } from "../../mail/bookingConfirmation.mail
 import bookingSMSService from "../../services/bookingSMS.service";
 import { createLogger } from "../../utils/logger";
 import { LoggerMessages } from "../../utils/loggerMessages";
+import otpService from "../../services/otp.service";
 
 const logger = createLogger('BookingController');
 
 
 export class BookingController {
+
+
+    private static async verifyPhoneOTP(phone: string, otp: string): Promise<boolean> {
+        try {
+            logger.info('Verifying OTP', { phone });
+            if (!phone || !otp) {
+                logger.error('Missing phone or OTP');
+                return false;
+            }
+            const result =  await otpService.verifyOTP(phone, otp);
+            console.log("OTP verification result:", result);
+            return result;
+        } catch (error) {
+            logger.error('Error verifying OTP', {
+                error,
+                phone,
+                errorMessage: error instanceof Error ? error.message : 'Unknown error'
+            });
+            return false;
+        }
+    }
+
+
     public async createBooking(req: any, res: Response) {
         try {
             console.log("Creating booking with data:", req.body);
@@ -266,7 +290,7 @@ export class BookingController {
                 userId: req.user?._id,
                 bookingData: req.body
             });
-            const { bookingData, hotelId, roomId, roomData, discountedBookings } = req.body;
+            const { bookingData, hotelId, roomId, roomData, discountedBookings, otp } = req.body;
             console.log("Booking data:", bookingData);
 
             // isCouponApplied: {
@@ -286,6 +310,23 @@ export class BookingController {
             //         message: "Invalid booking data"
             //     });
             // }
+
+                // Verify OTP before proceeding with booking
+                const isOTPValid = await BookingController.verifyPhoneOTP(bookingData.MobileNo, otp);
+
+                console.log("isOTPValid:", isOTPValid);
+            
+                if (!isOTPValid) {
+                    return res.status(ResponseCode.BAD_REQUEST).json({
+                        status: ResponseStatus.FAILED,
+                        message: "Invalid or expired OTP. Please verify your phone number first."
+                    });
+                }
+    
+                logger.info(LoggerMessages.BOOKING.CREATE.START, {
+                    userId: req.user?._id,
+                    bookingData: req.body
+                });
 
             // Validate hotel and room
             const hotel = await hotelManager.getById(hotelId);

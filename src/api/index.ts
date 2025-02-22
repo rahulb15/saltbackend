@@ -13,6 +13,7 @@ import eventCategoryRouter from "./routes/eventCategory.routes";
 import banquetHallRouter from "./routes/banquetHall.routes";
 import headerRoutes from './routes/header.routes';
 import featureHotelRouter from './routes/featured-hotel.routes';
+import otpRouter from "./routes/otp.routes";
 
 const router = express.Router();
 
@@ -30,6 +31,6 @@ router.use("/events", eventCategoryRouter);
 router.use("/banquet-halls", banquetHallRouter);
 router.use("/header", headerRoutes);
 router.use("/featured-hotels", featureHotelRouter);
-
+router.use("/otp", otpRouter);
 
 export default router;

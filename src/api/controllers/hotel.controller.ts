@@ -815,6 +815,8 @@ export class HotelController {
                   console.log(`No valid rooms found for hotel ${hotel.hotelCode}`);
                   return null; // Skip this hotel if no valid rooms
                 }
+
+                console.log(`Valid Rooms for hotel ${hotel.hotelCode}:`, validRooms);
                 
                 // Find lowest price room among valid rooms
                 const lowestPriceRoom = validRooms.reduce((min, room) => {
@@ -854,6 +856,7 @@ export class HotelController {
                 return {
                   _id: hotel._id,
                   name: hotel.name,
+                  roomName: lowestPriceRoom.name,
                   type: hotel.type,
                   description: hotel.description || lowestPriceRoom.description,
                   address: {
