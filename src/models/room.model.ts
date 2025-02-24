@@ -370,7 +370,7 @@ const roomSchema = new Schema({
     roomName: {
         type: String,
         required: true,
-        unique: true,
+        // unique: true,
         trim: true
     },
     roomDescription: {
@@ -379,6 +379,7 @@ const roomSchema = new Schema({
     },
     roomtypeShortCode: {
         type: String,
+        unique: true,
         required: true
     },
     type: {

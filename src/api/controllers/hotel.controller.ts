@@ -251,6 +251,7 @@ export class HotelController {
                         amenities: hotel.amenities,
                         contact: hotel.contact,
                         description: hotel.description,
+                        policies: hotel.policies,
                     })),
                     pagination: {
                         page,

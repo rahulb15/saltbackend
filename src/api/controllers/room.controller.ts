@@ -1011,11 +1011,11 @@ export class RoomController {
                 availability: {
                     status: "available",
                     unavailableDates: [],
-                    availableRooms: roomData.available_rooms,
+                    // availableRooms: roomData.available_rooms,
                     minAvailableRooms: parseInt(roomData.min_ava_rooms) || 0,
-                    stopSells: roomData.stopsells,
-                    closeOnArrival: roomData.close_on_arrival,
-                    closeOnDept: roomData.close_on_dept
+                    // stopSells: roomData.stopsells,
+                    // closeOnArrival: roomData.close_on_arrival,
+                    // closeOnDept: roomData.close_on_dept
                 },
     
                 // Room specifications
@@ -1035,8 +1035,8 @@ export class RoomController {
                     checkInTime: roomData.check_in_time || "14:00",
                     checkOutTime: roomData.check_out_time || "12:00",
                     cancellationPolicy: "Standard cancellation policy",
-                    minimumStay: roomData.min_nights,
-                    maxNights: roomData.max_nights || [],
+                    // minimumStay: roomData.min_nights,
+                    // maxNights: roomData.max_nights || [],
                     avgMinNights: roomData.Avg_min_nights || "1",
                     cancellationDeadline: roomData.cancellation_deadline,
                     prepaidNonCancelNonRefundable: roomData.prepaid_noncancel_nonrefundable
